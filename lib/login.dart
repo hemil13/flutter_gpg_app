@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gpg_app/signup.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class LoginApp extends StatelessWidget {
     @override
@@ -6,7 +8,7 @@ class LoginApp extends StatelessWidget {
       return MaterialApp(
         home: LoginMain(),
         debugShowCheckedModeBanner: false,
-      );
+    );
   }
 }
 
@@ -18,6 +20,8 @@ class LoginMain extends StatefulWidget {
 class LoginAppState extends State<LoginMain>{
 
   GlobalKey<FormState> formKey = new GlobalKey<FormState>();
+
+  late String sEmail, sPassword;
 
   @override
   Widget build(BuildContext context){
@@ -56,17 +60,17 @@ class LoginAppState extends State<LoginMain>{
                   labelText: "Email",
                   hintText: "Enter Email Id",
                 ),
-                // onSaved: (value){
-                //   sEmail = value!;
-                // },
-                // validator: (value){
-                //   if (value!.isEmpty){
-                //     return "Email Id Required";
-                //   }
-                //   else{
-                //     return null;
-                //   }
-                // },
+                onSaved: (value){
+                  sEmail = value!;
+                },
+                validator: (value){
+                  if (value!.isEmpty){
+                    return "Email Id Required";
+                  }
+                  else{
+                    return null;
+                  }
+                },
               ),
             ),
             Padding(
@@ -82,17 +86,17 @@ class LoginAppState extends State<LoginMain>{
                   labelText: "Password",
                   hintText: "Enter Password",
                 ),
-                // onSaved: (value){
-                //   sPassword = value!;
-                // },
-                // validator: (value){
-                //   if (value!.isEmpty){
-                //     return "Password Required";
-                //   }
-                //   else{
-                //     return null;
-                //   }
-                // },
+                onSaved: (value){
+                  sPassword = value!;
+                },
+                validator: (value){
+                  if (value!.isEmpty){
+                    return "Password Required";
+                  }
+                  else{
+                    return null;
+                  }
+                },
               ),
             ),
             Padding(
@@ -104,18 +108,19 @@ class LoginAppState extends State<LoginMain>{
                 child: TextButton(
                   child: Text("Login"),
                   onPressed: (){
-                  //   if(formKey.currentState!.validate()){
-                  //     formKey.currentState!.save();
-                  //     Fluttertoast.showToast(
-                  //       msg: "Login Successful $sEmail, $sPassword",
-                  //       toastLength: Toast.LENGTH_LONG,
-                  //       timeInSecForIosWeb: 2,
-                  //       backgroundColor: Colors.green,
-                  //       textColor: Colors.white,
-                  //       fontSize: 16.0,
-                  //       gravity: ToastGravity.BOTTOM,
-                  //       );
-                  //   }
+                    if(formKey.currentState!.validate()){
+                      formKey.currentState!.save();
+                      print("Login Successful: $sEmail, $sPassword");
+                      Fluttertoast.showToast(
+                        msg: "Login Successful: $sEmail, $sPassword",
+                        toastLength: Toast.LENGTH_SHORT,
+                        timeInSecForIosWeb: 2,
+                        backgroundColor: Colors.green,
+                        textColor: Colors.white,
+                        fontSize: 16.0,
+                        gravity: ToastGravity.BOTTOM,
+                        );
+                    }
                   }, 
                   
                 ),
@@ -130,7 +135,7 @@ class LoginAppState extends State<LoginMain>{
                 child: TextButton(
                   child: Text("Create An Account"),
                   onPressed: (){
-                    // Navigator.push(context, MaterialPageRoute(builder: (_)=>SignupApp()));
+                    Navigator.push(context, MaterialPageRoute(builder: (_)=>SignupApp()));
                   }, 
                   
                 ),
