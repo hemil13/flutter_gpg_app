@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gpg_app/bottomNavigation.dart';
 import 'package:flutter_gpg_app/login.dart';
+import 'package:flutter_gpg_app/navigationDrawer.dart';
 import 'package:flutter_gpg_app/tabDemo.dart';
 
 void main() {
-  runApp(BottomDemo());
+  runApp(NavigationMain());
 }
 
 class MyApp extends StatelessWidget {
