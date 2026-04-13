@@ -1,50 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gpg_app/login.dart';
+import 'package:flutter_gpg_app/sqliteHelper.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
+
 class SignupApp extends StatefulWidget{
+
   @override
-  State<SignupApp> createState() => SignupAppState();
+  SignupState createState() => SignupState();
+
 }
 
-class SignupAppState extends State<SignupApp> {
+class SignupState extends State<SignupApp>{
 
   GlobalKey<FormState> formKey = new GlobalKey<FormState>();
-
-  late String sName, sEmail, sContact, sPassword;
+  late String sName,sEmail,sContact,sPassword,sConfirmPassword;
+  var dbHelper = SqliteHelper();
 
   @override
   Widget build(BuildContext context) {
+    // TODO: implement build
+    //throw UnimplementedError();
     return Scaffold(
       appBar: AppBar(
-        title: Text("Signup Page"),
-        backgroundColor: Colors.amberAccent.shade700,
+        title: Text("Signup"),
+        backgroundColor: Colors.amber.shade100,
       ),
-      body: SingleChildScrollView(
-        child: Container(
+      body: Container(
         child: Form(
           key: formKey,
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 20.0, 
-                    horizontal: 10.0
-                  ) ,
-                child: Image.asset(
-                  "assets/images/icon.png",
-                  height: 200.0, 
-                  width: 200.0,
-                ),
-              ),
-        
-        
-              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
                 child: TextFormField(
-                  keyboardType: TextInputType.text,
-                  maxLength: 15,
-                  obscureText: true,
+                  keyboardType: TextInputType.name,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
@@ -65,8 +55,6 @@ class SignupAppState extends State<SignupApp> {
                   },
                 ),
               ),
-        
-        
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
                 child: TextFormField(
@@ -91,28 +79,27 @@ class SignupAppState extends State<SignupApp> {
                   },
                 ),
               ),
-        
-        
-        
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
                 child: TextFormField(
-                  keyboardType: TextInputType.text,
-                  maxLength: 15,
-                  obscureText: true,
+                  keyboardType: TextInputType.phone,
+                  maxLength: 10,
                   decoration: InputDecoration(
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
                     ),
-                    labelText: "Contact Number",
-                    hintText: "Enter Contact Number",
+                    labelText: "Contact No.",
+                    hintText: "Enter Contact No.",
                   ),
                   onSaved: (value){
                     sContact = value!;
                   },
                   validator: (value){
                     if (value!.isEmpty){
-                      return "Contact Number Required";
+                      return "Contact No. Required";
+                    }
+                    else if(value.length<10){
+                      return "Valid Contact No. Required";
                     }
                     else{
                       return null;
@@ -120,8 +107,6 @@ class SignupAppState extends State<SignupApp> {
                   },
                 ),
               ),
-        
-        
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
                 child: TextFormField(
@@ -148,9 +133,32 @@ class SignupAppState extends State<SignupApp> {
                   },
                 ),
               ),
-        
-        
-        
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
+                child: TextFormField(
+                  keyboardType: TextInputType.text,
+                  maxLength: 15,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    ),
+                    labelText: "Confirm Password",
+                    hintText: "Enter Confirm Password",
+                  ),
+                  onSaved: (value){
+                    sConfirmPassword = value!;
+                  },
+                  validator: (value){
+                    if (value!.isEmpty){
+                      return "Confirm Password Required";
+                    }
+                    else{
+                      return null;
+                    }
+                  },
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 20.0),
                 child: Container(
@@ -158,50 +166,57 @@ class SignupAppState extends State<SignupApp> {
                   width: 200.0,
                   height: 40.0,
                   child: TextButton(
-                    child: Text("Signup"),
                     onPressed: (){
                       if(formKey.currentState!.validate()){
                         formKey.currentState!.save();
-                        print("Signup Successful: $sEmail, $sPassword");
-                        Fluttertoast.showToast(
-                          msg: "Signup Successful: $sEmail, $sPassword",
-                          toastLength: Toast.LENGTH_SHORT,
-                          timeInSecForIosWeb: 2,
-                          backgroundColor: Colors.green,
-                          textColor: Colors.white,
-                          fontSize: 16.0,
-                          gravity: ToastGravity.BOTTOM,
-                          );
+                        if(sPassword != sConfirmPassword){
+                          Fluttertoast.showToast(
+                            msg: "Password Does Not Match",
+                            toastLength: Toast.LENGTH_SHORT
+                            );
+                        }
+                        else{
+                          insertData(sName,sEmail,sContact,sPassword);
+                        }
                       }
                     }, 
-                    
-                  ),
-                ),
-              ),
-        
-        
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
-                child: Container(
-                  color: Colors.blue.shade300,
-                  width: 300.0,
-                  height: 40.0,
-                  child: TextButton(
-                    child: Text("Already Have An Account?"),
-                    onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (_)=>LoginApp()));
-                    }, 
-                    
+                    child: Text("Signup")
                   ),
                 ),
               ),
             ],
           ),
         ),
-            ),
       ),
     );
   }
-  
-}
 
+  void insertData(sName,sEmail,sContact,sPassword) async{
+
+    var listData = await dbHelper.checkUserData(sEmail, sContact);
+    //print(listData,listData.le);
+    if(listData.length > 0){
+      Fluttertoast.showToast(
+        msg: "You have already Registered",
+        toastLength: Toast.LENGTH_SHORT
+      );
+    }
+    else{      
+      Map<String,dynamic> map = {
+        SqliteHelper.name : sName,
+        SqliteHelper.email : sEmail,
+        SqliteHelper.contact : sContact,
+        SqliteHelper.password : sPassword
+      };
+      final id = await dbHelper.insertFun(map);
+      print(id);
+      Fluttertoast.showToast(
+        msg: "Signup Successfully",
+        toastLength: Toast.LENGTH_SHORT
+      );
+      // Navigator.pop(context);
+      Navigator.push(context, MaterialPageRoute(builder: (_)=>LoginApp()));
+    }
+  }
+
+} 
