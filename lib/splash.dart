@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_gpg_app/jsonSIgnup.dart';
 import 'package:flutter_gpg_app/login.dart';
 import 'package:flutter_gpg_app/razorpayDemo.dart';
 import 'package:flutter_gpg_app/signup.dart';
@@ -37,7 +38,8 @@ class SplashDemo extends State<SplashApp>{
   Future<Timer> startTimer() async{
 
     return new Timer(Duration(seconds: 3), (){
-      Navigator.push(context, MaterialPageRoute(builder: (_)=> RazorpayPage() ));
+      // Navigator.push(context, MaterialPageRoute(builder: (_)=> RazorpayPage() ));
+      Navigator.push(context, MaterialPageRoute(builder: (_)=> JsonSignupApp() ));
       // Navigator.push(context, MaterialPageRoute(builder: (_)=> LoginApp() ));
       
       // if(sUserId == ""){
