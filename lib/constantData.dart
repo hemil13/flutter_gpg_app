@@ -1,6 +1,6 @@
 class Constantdata {
 
-  static final BASE_URL = "http://10.251.163.103/FinalYearAppFlutter/";
+  static final BASE_URL = "http://192.168.1.108/FinalYearAppFlutter/";
 
   static final USERID = "userId";
   static final NAME = "name";

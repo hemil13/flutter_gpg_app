@@ -1,35 +1,25 @@
+import 'dart:convert';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gpg_app/signup.dart';
-import 'package:flutter_gpg_app/sqliteHelper.dart';
 import 'package:flutter_gpg_app/constantData.dart';
+import 'package:flutter_gpg_app/jsonProfile.dart';
+import 'package:flutter_gpg_app/jsonSIgnup.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-// class LoginMain extends StatelessWidget{
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // TODO: implement build
-//     //throw UnimplementedError();
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       home: LoginApp(),
-//     );
-//   }
-// }
-
-class LoginApp extends StatefulWidget{
+class JsonLoginApp extends StatefulWidget{
 
   @override
-  LoginState createState() => LoginState();
+  JsonLoginState createState() => JsonLoginState();
 
 }
 
-class LoginState extends State<LoginApp>{
+class JsonLoginState extends State<JsonLoginApp>{
 
   GlobalKey<FormState> formKey = new GlobalKey<FormState>();
   late String sEmail,sPassword;
-  var dbHelper = SqliteHelper();
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +35,7 @@ class LoginState extends State<LoginApp>{
           key: formKey,
           child: Column(
             children: [
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
                 child: TextFormField(
@@ -69,6 +60,7 @@ class LoginState extends State<LoginApp>{
                   },
                 ),
               ),
+              
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0,vertical: 10.0),
                 child: TextFormField(
@@ -102,11 +94,23 @@ class LoginState extends State<LoginApp>{
                   width: 200.0,
                   height: 40.0,
                   child: TextButton(
-                    onPressed: (){
+                    onPressed: () async {
+                      var connection = await Connectivity().checkConnectivity();
                       if(formKey.currentState!.validate()){
                         formKey.currentState!.save();
-                          loginData(sEmail,sPassword);
+                          if (connection.contains(ConnectivityResult.mobile) || connection.contains(ConnectivityResult.wifi)){
+                            insertData(sEmail,sPassword);
+                          }
+                          else{
+                            Fluttertoast.showToast(
+                              msg: "Internet/Wifi Not Connected",
+                              toastLength: Toast.LENGTH_SHORT
+                            );
+                          }
+                          //insertData(sName,sEmail,sContact,sPassword);
+                        
                       }
+                      
                     }, 
                     child: Text("Login")
                   ),
@@ -120,7 +124,7 @@ class LoginState extends State<LoginApp>{
                   height: 40.0,
                   child: TextButton(
                     onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (_)=>SignupApp()));
+                      Navigator.push(context, MaterialPageRoute(builder: (_)=>JsonSignupApp()));
                     }, 
                     child: Text("Create An Account")
                   ),
@@ -133,44 +137,73 @@ class LoginState extends State<LoginApp>{
     );
   }
 
-  void loginData(sEmail,sPassword) async{
+  void insertData(sEmail,sPassword) async{
     var sp = await SharedPreferences.getInstance();
-    var listData = await dbHelper.loginData(sEmail, sPassword);
-    if(listData.length > 0){
-      print(listData);
-      print(listData.length);
-      
-      var sUserId = listData[0]['userId'];
-      var sName = listData[0]['name'];
-      var sEmail = listData[0]['email'];
-      var sContact = listData[0]['contact'];
-      var sPassword = listData[0]['password'];
-      
-      print(sUserId);
-      print(sName);
-      print(sEmail);
-      print(sContact);
-      print(sPassword);
+    
+    var map = {
+        'email' : sEmail,
+        'password' : sPassword
+      };
 
-      sp.setString(Constantdata.USERID, sUserId.toString());
-      sp.setString(Constantdata.NAME, sName);
-      sp.setString(Constantdata.EMAIL, sEmail);
-      sp.setString(Constantdata.CONTACT, sContact);
-      sp.setString(Constantdata.PASSWORD, sPassword);
+    var data = await http.post(Uri.parse(Constantdata.BASE_URL+'login.php'),body: map);
+    if(data.statusCode == 200){
+      var jsonData = json.decode(data.body);
+      if(jsonData["Status"] == true){
+        Fluttertoast.showToast(
+          msg: jsonData["Message"],
+          toastLength: Toast.LENGTH_SHORT,
+          timeInSecForIosWeb: 2,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.amber,
+          textColor: Colors.black,
+          fontSize: 16.0
+        );
+        
+        var userData = jsonData["UserData"];
+        for(var i = 0;i<userData.length;i++){
+          var sUserId = userData[i]["userid"];
+          var sName = userData[i]["name"];
+          var sEmail = userData[i]["email"];
+          var sContact = userData[i]["contact"];
+          var sPassword = userData[i]["password"];
 
-      Fluttertoast.showToast(
-        msg: "Login Successfully",
-        toastLength: Toast.LENGTH_SHORT
-      );
+          sp.setString(Constantdata.USERID, sUserId);
+          sp.setString(Constantdata.NAME, sName);
+          sp.setString(Constantdata.EMAIL, sEmail);
+          sp.setString(Constantdata.CONTACT, sContact);
+          sp.setString(Constantdata.PASSWORD, sPassword);
 
-      // Navigator.push(context, MaterialPageRoute(builder: (_)=> ProfileApp()));
+          print("Login $sName");
+          print("Login password $sPassword");
 
+        }
+
+        Navigator.push(context, MaterialPageRoute(builder: (_)=>JsonProfileApp()));
+      }
+      else{
+        Fluttertoast.showToast(
+          msg: jsonData["Message"],
+          toastLength: Toast.LENGTH_SHORT,
+          timeInSecForIosWeb: 2,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.amber,
+          textColor: Colors.black,
+          fontSize: 16.0
+        );
+      }
     }
-    else{      
+    else{
       Fluttertoast.showToast(
-        msg: "Login Unsuccessfully / user not exists",
-        toastLength: Toast.LENGTH_SHORT
+        msg: "Server Error Code : ${data.statusCode}",
+        toastLength: Toast.LENGTH_SHORT,
+        timeInSecForIosWeb: 2,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.amber,
+        textColor: Colors.black,
+        fontSize: 16.0
       );
     }
+
   }
+
 }
